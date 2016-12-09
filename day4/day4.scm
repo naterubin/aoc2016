@@ -5,12 +5,12 @@
 
 (define-record room-name name sector-id checksum)
 
-(define room-name-regex "([A-Za-z|-]+)(\\d+)\\[([A-Za-z]+)\\]")
+(define room-name-regex "([A-Za-z|-]+)-(\\d+)\\[([A-Za-z]+)\\]")
 
 (define (parse-room-name name)
   (let ((match (irregex-match room-name-regex name)))
    (make-room-name
-     (string-delete #\- (irregex-match-substring match 1))
+     (irregex-match-substring match 1)
      (string->number (irregex-match-substring match 2))
      (irregex-match-substring match 3))))
 
@@ -37,11 +37,32 @@
 (define (generate-checksum name)
   (frequency-list->string (take (generate-frequency-map (string->list name)) 5)))
 
+(define (shift-char char)
+  (cond
+    ((eq? char #\Z) #\A)
+    ((eq? char #\z) #\a)
+    (else (integer->char (add1 (char->integer char))))))
+
+(define (shift-char-times char times)
+  (if (eq? times 0)
+    char
+    (shift-char-times (shift-char char) (sub1 times))))
+
+(define (decoded-name name)
+  (list->string
+    (map (lambda (letter)
+            (if (eq? letter #\-)
+            #\space
+            (shift-char-times letter (room-name-sector-id name))))
+        (string->list (room-name-name name))
+        )))
+
 (define (count-valid-rooms line sum)
   (if (eof-object? line)
     sum
     (let ((name (parse-room-name line)))
-     (if (equal? (room-name-checksum name) (generate-checksum (room-name-name name)))
+     (printf "~s ~s\n" (decoded-name name) (room-name-sector-id name))
+     (if (equal? (room-name-checksum name) (generate-checksum (string-delete #\- (room-name-name name))))
        (count-valid-rooms (read-line) (+ sum (room-name-sector-id name)))
        (count-valid-rooms (read-line) sum)))))
 
