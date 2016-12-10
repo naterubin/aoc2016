@@ -34,8 +34,12 @@
   (let ((col-list (hash-table->alist col)))
 	(car (car (sort col-list (lambda (left right) (> (cdr left) (cdr right))))))))
 
+(define (get-least-common-char col)
+  (let ((col-list (hash-table->alist col)))
+	(car (car (sort col-list (lambda (left right) (< (cdr left) (cdr right))))))))
+
 (define (get-secret-code)
-  (map get-most-common-char cols))
+  (map get-least-common-char cols))
 
 (define (main args)
   (parse-input (read-line))
