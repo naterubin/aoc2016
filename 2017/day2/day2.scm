@@ -52,10 +52,6 @@
           (set! checksums (cons (compute-checksum line fun) checksums))
           (compute-checksums fun)))))
 
-(compute-checksums max-minus-min)
-(print (reduce + 0 checksums))
-
-(define checksums '())
-
+;; (compute-checksums max-minus-min)
 (compute-checksums row-product)
 (print (reduce + 0 checksums))
