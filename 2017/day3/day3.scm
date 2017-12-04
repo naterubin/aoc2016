@@ -1,4 +1,6 @@
+(use vector-lib)
 (require-extension srfi-1)
+(require-extension matchable)
 
 (define (numbers-in-square dim start)
   (iota (+ (* dim 2) (* (- dim 2) 2)) start))
@@ -16,12 +18,34 @@
   (let ((len (/ (length l) 2)))
     (list (take l len) (drop l len))))
 
-;; doesn't work, match-let undefined
 (define (quarter-list l)
-  (match-let (((list start end) (split-list l)))
-    (list (split-list start) (split-list end))))
+  (match-let* (((start end) (split-list l))
+               ((first second) (split-list start))
+               ((third fourth) (split-list end)))
+    (list first second third fourth)))
 
 ;; check each quarter to see if number is in it,
 ;; if so, weight each item in list starting at
 ;; middle-1, increasing outwards. add weight to
 ;; square number for answer to riddle
+
+(define (which-quarter num quarters)
+  (match-let (((first second third fourth) quarters))
+    (cond
+     ((memq num first) first)
+     ((memq num second) second)
+     ((memq num third) third)
+     ((memq num fourth) fourth))))
+
+(define (make-weight-vector len)
+  (list->vector
+   (map (lambda (i)
+          (abs (- i (- (/ len 2) 1))))
+        (iota len))))
+
+(match-let* ((target 325489)
+             ((square-num square) (get-square target))
+             (quarter (which-quarter target (quarter-list square)))
+             (weights (make-weight-vector (length quarter)))
+             (target-index (vector-index (lambda (x) (= x target)) (list->vector quarter))))
+  (print (+ (floor (/ square-num 2)) (vector-ref weights target-index))))
