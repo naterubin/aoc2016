@@ -12,6 +12,30 @@ sub character_counts(Str $box_id) {
     return %counts;
 }
 
+sub id_difference(Str $id_one, Str $id_two) {
+    my $difference = 0;
+
+    for $id_one.comb.kv -> $i, $c {
+        if ($id_two.comb[$i] ne $c) {
+            $difference++;
+        }
+    }
+
+    return $difference;
+}
+
+sub id_common_letters(Str $id_one, Str $id_two) {
+    my @common_letters;
+
+    for $id_one.comb.kv -> $i, $c {
+        if ($id_two.comb[$i] eq $c) {
+            @common_letters.append($c);
+        }
+    }
+
+    return @common_letters.join;
+}
+
 sub MAIN(Str $input_file) {
     my $threes = 0;
     my $twos   = 0;
@@ -26,5 +50,19 @@ sub MAIN(Str $input_file) {
         }
     }
 
-    say $threes * $twos;
+    say "Checksum: $($threes * $twos)";
+
+    SCAN: for $input_file.IO.lines.kv -> $i, $line {
+        for $input_file.IO.lines.kv -> $j, $line2 {
+            if ($i != $j) {
+                my $difference = id_difference($line, $line2);
+
+                if ($difference == 1) {
+                    say "Correct IDs: $line $line2";
+                    say "Common letters: $(id_common_letters($line, $line2))";
+                    last SCAN;
+                }
+            }
+        }
+    }
 }
