@@ -10,6 +10,17 @@ class Claim {
         my $y_intersect = ($y >= $!min_y and $y <= $!max_y);
         return ($x_intersect and $y_intersect);
     }
+
+    method intersects(Claim $other) returns Bool {
+        if ($!min_x > $other.max_x || $other.min_x > $!max_x) {
+            return False;
+        }
+        if ($!min_y > $other.max_y || $other.min_y > $!max_y) {
+            return False;
+        }
+
+        return True;
+    }
 }
 
 grammar ClaimRecord {
@@ -41,6 +52,7 @@ sub MAIN($input_file) {
         @claims.append($match.made);
     }
 
+    #`[
     my $bottom_x = 0;
     my $bottom_y = 0;
     for @claims -> $claim {
@@ -70,4 +82,17 @@ sub MAIN($input_file) {
     }
 
     say "$doubled_squares appear at least twice.";
+    ]
+
+    OUTER_LOOP: for @claims -> $claim {
+        for @claims -> $other_claim {
+            if $claim.id != $other_claim.id {
+                if $claim.intersects($other_claim) {
+                    next OUTER_LOOP;
+                }
+            }
+        }
+
+        say "$($claim.id) does not intersect any other claim";
+    }
 }
