@@ -3,6 +3,12 @@ defmodule Radar do
     check_increase(readings, 0)
   end
 
+  def windowed_scanner(readings) do
+    make_windows(readings, [])
+    |> Enum.map(&Enum.sum/1)
+    |> check_increase(0)
+  end
+
   defp check_increase([_ | []], acc) do
     acc
   end
@@ -14,6 +20,24 @@ defmodule Radar do
     else
       check_increase(t, acc)
     end
+  end
+
+  defp next_three(l) do
+    case l do
+      [] -> []
+      [h1 | []] -> [h1]
+      [h1 | [h2 | []]] -> [h1, h2]
+      [h1 | [h2 | [h3 | _]]] -> [h1, h2, h3]
+    end
+  end
+
+  defp make_windows([], acc) do
+    acc
+  end
+
+  defp make_windows(l, acc) do
+    [_ | tail] = l
+    make_windows(tail, acc ++ [next_three(l)])
   end
 
   def load_readings(file_name) do
@@ -29,3 +53,4 @@ defmodule Radar do
 end
 
 IO.puts(Radar.load_readings("input.txt") |> Radar.scanner)
+IO.puts(Radar.load_readings("input.txt") |> Radar.windowed_scanner)
