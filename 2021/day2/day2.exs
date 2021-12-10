@@ -8,10 +8,10 @@ defmodule Submarine do
   end
 
   def execute_commands(commands) do
-    move(commands, {0, 0})
+    move(commands, {0, 0, 0})
   end
 
-  def get_result({hrz, vrt}) do
+  def get_result({hrz, vrt, _}) do
     hrz * vrt
   end
 
@@ -19,12 +19,12 @@ defmodule Submarine do
     acc
   end
 
-  defp move(commands, {hrz, vrt}) do
+  defp move(commands, {hrz, vrt, aim}) do
     [command | rest] = commands
     new_pos = case command do
-                {:forward, qty} -> {hrz + qty, vrt}
-                {:up, qty} -> {hrz, vrt - qty}
-                {:down, qty} -> {hrz, vrt + qty}
+                {:forward, qty} -> {hrz + qty, vrt + (aim * qty), aim}
+                {:up, qty} -> {hrz, vrt, aim - qty}
+                {:down, qty} -> {hrz, vrt, aim + qty}
               end
     move(rest, new_pos)
   end
