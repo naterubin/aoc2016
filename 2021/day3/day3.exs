@@ -23,15 +23,23 @@ defmodule Diagnostics do
   end
 
   defp most_common_digit(digit_counts) do
-    digit_counts |> Map.to_list
-                 |> Enum.max_by(fn {_, v} -> v end)
-                 |> elem(0)
+    zero_count = Map.get(digit_counts, 0)
+    one_count  = Map.get(digit_counts, 1)
+    cond do
+      zero_count == one_count -> 1
+      zero_count >  one_count -> 0
+      zero_count <  one_count -> 1
+    end
   end
 
   defp least_common_digit(digit_counts) do
-    digit_counts |> Map.to_list
-                 |> Enum.min_by(fn {_, v} -> v end)
-                 |> elem(0)
+    zero_count = Map.get(digit_counts, 0)
+    one_count  = Map.get(digit_counts, 1)
+    cond do
+      zero_count == one_count -> 0
+      zero_count <  one_count -> 0
+      zero_count >  one_count -> 1
+    end
   end
 
   def gamma_rate(digit_counts) do
@@ -51,6 +59,33 @@ defmodule Diagnostics do
           |> Enum.map(&(elem(&1, 0)))
   end
 
+  def bit_criteria_rating(entries, bit_calc_func) do
+    bit_criteria_rating(entries, 0, bit_calc_func)
+  end
+
+  def bit_criteria_rating([entry], _, _) do
+    Integer.undigits(entry, 2)
+  end
+
+  def bit_criteria_rating(entries, place, bit_calc_func) do
+    counts = build_digit_count(entries)
+    desired_bit = bit_calc_func.(Enum.at(counts, place))
+    filtered_entries = Enum.filter(entries, fn l -> Enum.at(l, place) == desired_bit end)
+    bit_criteria_rating(filtered_entries, place + 1, bit_calc_func)
+  end
+
+  def o2_generator_rating(entries) do
+    bit_criteria_rating(entries, &most_common_digit/1)
+  end
+
+  def co2_scrubber_rating(entries) do
+    bit_criteria_rating(entries, &least_common_digit/1)
+  end
+
+  def life_support_rating(entries) do
+    o2_generator_rating(entries) * co2_scrubber_rating(entries)
+  end
+
   def get_input(file_name) do
     {:ok, input} = File.read(file_name)
     commands = String.split(input, "\n")
@@ -59,7 +94,5 @@ defmodule Diagnostics do
   end
 end
 
-IO.inspect(Diagnostics.get_input("input.txt")
+bitwise_inputs = Diagnostics.get_input("input.txt")
     |> Enum.map(&Diagnostics.parse_diag_entry/1)
-    |> Diagnostics.build_digit_count
-    |> (fn counts -> Diagnostics.gamma_rate(counts) * Diagnostics.epsilon_rate(counts) end).())
